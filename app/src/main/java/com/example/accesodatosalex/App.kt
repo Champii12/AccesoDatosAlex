@@ -2,7 +2,6 @@ package com.example.accesodatosalex
 
 import android.app.Application
 import androidx.room.Room
-import com.example.accesodatosalex.ui.theme.AppDatabase
 
 class App : Application() {
 

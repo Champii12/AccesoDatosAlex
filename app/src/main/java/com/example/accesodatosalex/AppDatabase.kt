@@ -1,4 +1,4 @@
-package com.example.accesodatosalex.ui.theme
+package com.example.accesodatosalex
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
