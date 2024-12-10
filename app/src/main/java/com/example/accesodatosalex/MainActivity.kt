@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -34,6 +35,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val database = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java,
+            "company_database"
+        ).allowMainThreadQueries().build()
+
         setContent {
             AccesoDatosAlexTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -42,7 +50,7 @@ class MainActivity : ComponentActivity() {
 
                         Text("ACCESO A DATOS",
                             modifier = Modifier
-                                .fillMaxSize()
+                                .fillMaxWidth()
                                 .background(Color.Gray)
                                 .border(1.dp, Color.Gray)
                                 .padding(16.dp),
@@ -59,7 +67,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             listaNombreTabla.forEach { nombre ->
                                 Button(
-                                    onClick = { mostrarDatosDeTabla(nombre) },
+                                    onClick = {  },
                                     modifier = Modifier
                                         .size(200.dp, 80.dp)
                                         .padding(8.dp),
@@ -72,51 +80,13 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-
-                        // Aquí podrás añadir la lógica para mostrar los datos de cada tabla
-                        // por ejemplo, una lista de customers
                     }
                 }
             }
         }
     }
 
-    // Función que muestra los datos al hacer clic en el botón
-    private fun mostrarDatosDeTabla(tabla: String) {
-        lifecycleScope.launch {
-            // Acceder a los datos desde la base de datos
-            when (tabla) {
-                "customers" -> {
-                    val customers = getDatabase().customerDao().getAllCustomers()
-                    mostrarDatosEnVista(customers)
-                }
-                "departments" -> {
-                    val departments = getDatabase().departmentDao().getAllDepartments()
-                    mostrarDatosEnVista(departments)
-                }
-                "employee_projects" -> {
-                    val employeeProjects = getDatabase().employeeProjectDao().getAllEmployeeProjects()
-                    mostrarDatosEnVista(employeeProjects)
-                }
-                "employees" -> {
-                    val employees = getDatabase().employeeDao().getAllEmployees()
-                    mostrarDatosEnVista(employees)
-                }
 
-            }
-        }
-    }
 
-    private fun mostrarDatosEnVista(data: List<Any>) {
-        // Aquí puedes manejar la lógica para mostrar los datos en tu vista
-        // Por ejemplo, mostrar un listado en un nuevo Composable
-    }
 
-    private fun getDatabase(): AppDatabase {
-        return Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java,
-            "app-database"
-        ).build()
-    }
 }
