@@ -1,6 +1,7 @@
 package com.example.accesodatosalex
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -47,6 +48,7 @@ import com.example.accesodatosalex.entity.Order
 import com.example.accesodatosalex.entity.OrderItem
 import com.example.accesodatosalex.entity.Project
 import com.example.accesodatosalex.ui.theme.AccesoDatosAlexTheme
+import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,11 +66,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavHost(navController = navController, startDestination = "main") {
-                        composable("main") { MainScreen(innerPadding, navController) }
-                        composable("dataList/{tableName}") { backStackEntry ->
-                            val tableName = backStackEntry.arguments?.getString("tableName")
-                            DataListScreen(database, tableName, innerPadding)
-                        }
+                        composable("main") { MainScreen(innerPadding, navController, database) }
                     }
                 }
             }
@@ -79,19 +77,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(innerPadding: PaddingValues, navController: NavController) {
-
+fun MainScreen(innerPadding: PaddingValues, navController: NavController, db: AppDatabase) {
+    val data = runBlocking { db.projectDao().getProyectQuery() }
+    val columnas = 4
     Column(modifier = Modifier.padding(innerPadding)) {
-        val listaNombreTabla = listOf(
-            "customers",
-            "departments",
-            "employee_projects",
-            "employees",
-            "order_items",
-            "orders",
-            "projects"
-        )
-
         Text(
             "ACCESO A DATOS",
             modifier = Modifier
@@ -103,389 +92,44 @@ fun MainScreen(innerPadding: PaddingValues, navController: NavController) {
             fontSize = 24.sp,
             color = Color.Red
         )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically)
+        LazyVerticalGrid(columns = GridCells.Fixed(columnas)
         ) {
-            listaNombreTabla.forEach { nombre ->
-                Button(
-                    onClick = {
-                        navController.navigate("dataList/$nombre")
-                    },
-                    modifier = Modifier
-                        .size(200.dp, 80.dp)
-                        .padding(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text(nombre)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun DataListScreen(db: AppDatabase, tableName: String?, innerPadding: PaddingValues) {
-    val data = produceState(initialValue = emptyList<Any>(), key1 = tableName) {
-        value = when (tableName) {
-            "customers" -> db.customerDao().getAllCustomers()
-            "departments" -> db.departmentDao().getAllDepartments()
-            "employee_projects" -> db.employeeProjectDao().getAllEmployeeProjects()
-            "employees" -> db.employeeDao().getAllEmployees()
-            "order_items" -> db.orderItemDao().getAllOrderItems()
-            "orders" -> db.orderDao().getAllOrders()
-            "projects" -> db.projectDao().getAllProjects()
-            else -> emptyList()
-        }
-    }.value
-
-    Column(modifier = Modifier.padding(innerPadding)) {
-        Text("Tabla: $tableName", fontSize = 24.sp, modifier = Modifier.padding(16.dp))
-        when (tableName) {
-            "customers" -> TableCustomer(data as List<Customer>)
-            "departments" -> TableDepartment(data as List<Department>)
-            "employee_projects" -> TableEmployeeProject(data as List<EmployeeProject>)
-            "employees" -> TableEmployee(data as List<Employee>)
-            "order_items" -> TableOrderItem(data as List<OrderItem>)
-            "orders" -> TableOrder(data as List<Order>)
-            "projects" -> TableProject(data as List<Project>)
-            else -> LazyColumn {
-                items(data) { item ->
-                    Text(item.toString(), modifier = Modifier.padding(8.dp))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun TableCustomer(customers: List<Customer>) {
-    val columns = 4
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(columns)
-    ) {
-        listOf("ID", "Nombre", "Email", "Teléfono").forEach {
-            item {
-                Text(it, modifier = Modifier
-                    .padding(8.dp)
-                )
-
-            }
-        }
-
-        item(span = { GridItemSpan(columns) }) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .background(Color.Black)
-            )
-        }
-
-
-        customers.forEach { customer ->
-            listOf(
-                customer.customer_id.toString(),
-                customer.customer_name,
-                customer.contact_email,
-                customer.contact_phone
-            ).forEach { value ->
-                item {
+            listOf("Project Id","Project Salary Costs","Budget","Cost Fraction").forEach {
+                item{
                     Text(
-                        value,
+                        it,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier
-                            .border(1.dp, Color.Gray)
-                            .padding(8.dp)
-                            .fillMaxWidth(),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                            .fillMaxWidth()
+                            .height(90.dp)
+                            .background(Color.Black)
+                            .padding(8.dp),
+                        color = Color.Red
                     )
+                }
+            }
+
+            data.forEach { value ->
+                listOf(
+                    value.projectId.toString(),
+                    value.projectSalaryCosts.toString(),
+                    value.budget.toString(),
+                    value.costFraction.toString()).forEach{ item ->
+                    item {
+                        Text(
+                            item,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(90.dp)
+                                .background(Color.Gray)
+                                .padding(8.dp),
+                            color = Color.Black
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-@Composable
-fun TableDepartment(departments: List<Department>) {
-    val columns = 3
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(columns)
-    ) {
-        listOf("ID", "Nombre", "Manager").forEach {
-            item {
-                Text(
-                    it, modifier = Modifier
-                        .padding(8.dp)
-                )
-
-            }
-        }
-
-        item(span = { GridItemSpan(columns) }) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .background(Color.Black)
-            )
-        }
-        departments.forEach { department ->
-            listOf(
-                department.department_id.toString(),
-                department.department_name,
-                department.manager_id.toString()
-            ).forEach { value ->
-                item {
-                    Text(
-                        value,
-                        modifier = Modifier
-                            .border(1.dp, Color.Gray)
-                            .padding(8.dp)
-                            .fillMaxWidth(),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
-    }
-}
-@Composable
-fun TableEmployeeProject(employeeProjects: List<EmployeeProject>) {
-    val columns = 3
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(columns)
-    ) {
-        listOf("ID Empleado", "ID Proyecto", "Horas trabajadas").forEach {
-            item {
-                Text(
-                    it, modifier = Modifier
-                        .padding(8.dp)
-                )
-
-            }
-        }
-
-        item(span = { GridItemSpan(columns) }) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .background(Color.Black)
-            )
-        }
-        employeeProjects.forEach { employeeProject ->
-            listOf(
-                employeeProject.employee_id.toString(),
-                employeeProject.project_id.toString(),
-                employeeProject.hours_worked.toString()
-            ).forEach { value ->
-                item {
-                    Text(
-                        value,
-                        modifier = Modifier
-                            .border(1.dp, Color.Gray)
-                            .padding(8.dp)
-                            .fillMaxWidth(),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
-    }
-}
-@Composable
-fun TableEmployee(employees: List<Employee>) {
-    val columns = 7
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(columns)
-    ) {
-        listOf("ID", "Nombre", "Apellido", "ID Departamento", "Fecha de contratación", "Salario", "Posición").forEach {
-            item {
-                Text(
-                    it, modifier = Modifier
-                        .padding(8.dp)
-                )
-
-            }
-        }
-
-        item(span = { GridItemSpan(columns) }) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .background(Color.Black)
-            )
-        }
-        employees.forEach { employee ->
-            listOf(
-                employee.employee_id.toString(),
-                employee.first_name,
-                employee.last_name,
-                employee.department_id.toString(),
-                employee.hire_date,
-                employee.salary.toString(),
-                employee.position
-            ).forEach { value ->
-                item {
-                    Text(
-                        value,
-                        modifier = Modifier
-                            .border(1.dp, Color.Gray)
-                            .padding(8.dp)
-                            .fillMaxWidth(),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
-    }
-}
-@Composable
-fun TableOrderItem(orderItems: List<OrderItem>) {
-    val columns = 2
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(columns)
-    ) {
-        listOf("ID", "ID Pedido").forEach {
-            item {
-                Text(
-                    it, modifier = Modifier
-                        .padding(8.dp)
-                )
-
-            }
-        }
-
-        item(span = { GridItemSpan(columns) }) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .background(Color.Black)
-            )
-        }
-        orderItems.forEach { orderItem ->
-            listOf(
-                orderItem.order_item_id.toString(),
-                orderItem.order_id.toString()
-            ).forEach { value ->
-                item {
-                    Text(
-                        value,
-                        modifier = Modifier
-                            .border(1.dp, Color.Gray)
-                            .padding(8.dp)
-                            .fillMaxWidth(),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
-    }
-}
-@Composable
-fun TableOrder(orders: List<Order>) {
-    val columns = 4
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(columns)
-    ) {
-        listOf("ID", "ID Cliente", "Fecha de pedido", "Cantidad").forEach {
-            item {
-                Text(
-                    it, modifier = Modifier
-                        .padding(8.dp)
-                )
-
-            }
-        }
-
-        item(span = { GridItemSpan(columns) }) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .background(Color.Black)
-            )
-        }
-        orders.forEach { order ->
-            listOf(
-                order.order_id.toString(),
-                order.customer_id.toString(),
-                order.order_date,
-                order.amount.toString()
-            ).forEach { value ->
-                item {
-                    Text(
-                        value,
-                        modifier = Modifier
-                            .border(1.dp, Color.Gray)
-                            .padding(8.dp)
-                            .fillMaxWidth(),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
-    }
-}
-@Composable
-fun TableProject(projects: List<Project>) {
-    val columns = 6
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(columns)
-    ) {
-        listOf("ID", "Nombre", "ID Departamento", "Presupuesto", "Fecha de inicio", "Fecha de fin").forEach {
-            item {
-                Text(
-                    it, modifier = Modifier
-                        .padding(8.dp)
-                )
-
-            }
-        }
-
-        item(span = { GridItemSpan(columns) }) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .background(Color.Black)
-            )
-        }
-        projects.forEach { project ->
-            listOf(
-                project.project_id.toString(),
-                project.project_name,
-                project.department_id.toString(),
-                project.budget.toString(),
-                project.start_date,
-                project.end_date
-            ).forEach { value ->
-                item {
-                    Text(
-                        value,
-                        modifier = Modifier
-                            .border(1.dp, Color.Gray)
-                            .padding(8.dp)
-                            .fillMaxWidth(),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
-    }
-}

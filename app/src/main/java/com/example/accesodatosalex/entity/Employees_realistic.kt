@@ -1,9 +1,12 @@
 package com.example.accesodatosalex.entity
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "employees")
+@Entity(tableName = "employees", foreignKeys = [
+    ForeignKey(entity = Department::class, parentColumns = ["department_id"], childColumns = ["department_id"])
+])
 data class Employee(
     @PrimaryKey val employee_id: Int,
     val first_name: String,
