@@ -80,31 +80,40 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(innerPadding: PaddingValues, navController: NavController, db: AppDatabase) {
     val data = runBlocking { db.projectDao().getProyectQuery() }
     val columnas = 4
+    val colors = listOf(
+        Color(0xFFFFCDD2), // Red80
+        Color(0xFFBBDEFB), // Blue80
+        Color(0xFFC8E6C9), // Green80
+        Color(0xFFFFF9C4), // Yellow80
+        Color(0xFFFFE0B2), // Orange80
+        Color(0xFFD7CCC8), // Brown80
+        Color(0xFFCFD8DC)  // Grey80
+    )
     Column(modifier = Modifier.padding(innerPadding)) {
         Text(
             "ACCESO A DATOS",
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.Gray)
+                .background(Color(0xFFFFF9C4)) // Yellow80
                 .border(1.dp, Color.Gray)
                 .padding(16.dp),
             textAlign = TextAlign.Center,
             fontSize = 24.sp,
             color = Color.Red
         )
-        LazyVerticalGrid(columns = GridCells.Fixed(columnas)
-        ) {
-            listOf("Project Id","Project Salary Costs","Budget","Cost Fraction").forEach {
-                item{
+        LazyVerticalGrid(columns = GridCells.Fixed(columnas)) {
+            listOf("Project Id", "Project Salary Costs", "Budget", "Cost Fraction").forEachIndexed { index, it ->
+                item {
                     Text(
                         it,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(90.dp)
-                            .background(Color.Black)
+                            .background(Color(0xFFBBDEFB)) // Blue80
+                            .border(1.dp, Color.Black)
                             .padding(8.dp),
-                        color = Color.Red
+                        color = Color.Black
                     )
                 }
             }
@@ -114,7 +123,8 @@ fun MainScreen(innerPadding: PaddingValues, navController: NavController, db: Ap
                     value.projectId.toString(),
                     value.projectSalaryCosts.toString(),
                     value.budget.toString(),
-                    value.costFraction.toString()).forEach{ item ->
+                    value.costFraction.toString()
+                ).forEachIndexed { index, item ->
                     item {
                         Text(
                             item,
@@ -122,7 +132,8 @@ fun MainScreen(innerPadding: PaddingValues, navController: NavController, db: Ap
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(90.dp)
-                                .background(Color.Gray)
+                                .background(Color(0xFFC8E6C9))
+                                .border(1.dp, Color.Black)
                                 .padding(8.dp),
                             color = Color.Black
                         )
